@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>香港高才通A类申请助手</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <div class="max-w-4xl mx-auto p-6">
+        <h1 class="text-3xl font-bold text-center mb-8 text-blue-800">香港高才通A类申请助手</h1>
+        
+        <!-- 资格自测 -->
+        <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+            <h2 class="text-xl font-semibold mb-4">资格自测</h2>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium mb-2">申请前12个月收入类型</label>
+                    <select id="incomeType" class="w-full border rounded px-3 py-2">
+                        <option value="salary">受雇年薪</option>
+                        <option value="business">企业主（持股≥50%）</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-2">年收入（万人民币）</label>
+                    <input type="number" id="income" class="w-full border rounded px-3 py-2" placeholder="例如：300">
+                </div>
+                <button onclick="checkEligibility()" class="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700">检测资格</button>
+                <div id="result" class="mt-4 p-4 rounded hidden"></div>
+            </div>
+        </div>
+
+        <!-- 材料清单 -->
+        <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+            <h2 class="text-xl font-semibold mb-4">材料清单生成器</h2>
+            <div id="materials" class="space-y-2">
+                <p class="text-gray-600">请先完成资格自测</p>
+            </div>
+        </div>
+
+        <!-- 时间线规划 -->
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <h2 class="text-xl font-semibold mb-4">申请时间线</h2>
+            <div class="space-y-4">
+                <input type="month" id="targetMonth" class="border rounded px-3 py-2">
+                <button onclick="generateTimeline()" class="bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700">生成规划</button>
+                <div id="timeline" class="mt-4"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function checkEligibility() {
+            const type = document.getElementById('incomeType').value;
+            const income = parseFloat(document.getElementById('income').value);
+            const resultDiv = document.getElementById('result');
+            const materialsDiv = document.getElementById('materials');
+            
+            // 250万港币 ≈ 230万人民币（汇率约0.92）
+            const threshold = 230;
+            
+            if (income >= threshold) {
+                resultDiv.className = 'mt-4 p-4 rounded bg-green-100 text-green-800';
+                resultDiv.innerHTML = '<strong>✅ 符合A类申请资格</strong><br>您的收入达到高才通A类标准（≥250万港币/年）';
+                generateMaterials(type);
+            } else {
+                resultDiv.className = 'mt-4 p-4 rounded bg-red-100 text-red-800';
+                resultDiv.innerHTML = '<strong>❌ 暂不符合A类资格</strong><br>需要年收入≥250万港币（约230万人民币）';
+                materialsDiv.innerHTML = '<p class="text-gray-600">建议考虑高才通B类或优才计划</p>';
+            }
+            resultDiv.classList.remove('hidden');
+        }
+
+        function generateMaterials(type) {
+            const materialsDiv = document.getElementById('materials');
+            let html = '<ul class="list-disc pl-5 space-y-2">';
+            
+            const commonMaterials = [
+                '有效旅行证件（护照/港澳通行证）',
+                '近照（白底彩色证件照）',
+                '无犯罪记录证明',
+                '学历证明（学位证/毕业证）'
+            ];
+            
+            const salaryMaterials = [
+                '雇佣合同',
+                '过去12个月工资单',
+                '个人所得税纳税证明（个税APP截图）',
+                '公司出具的收入证明函'
+            ];
+            
+            const businessMaterials = [
+                '公司营业执照',
+                '公司章程（显示持股比例≥50%）',
+                '经审计的财务报表（公司利润≥250万港币）',
+                '公司银行流水',
+                '企业所得税纳税证明'
+            ];
+            
+            commonMaterials.forEach(m => html += `<li>${m}</li>`);
+            
+            if (type === 'salary') {
+                html += '<li class="font-semibold text-blue-600 mt-2">受雇人员额外材料：</li>';
+                salaryMaterials.forEach(m => html += `<li>${m}</li>`);
+            } else {
+                html += '<li class="font-semibold text-blue-600 mt-2">企业主额外材料：</li>';
+                businessMaterials.forEach(m => html += `<li>${m}</li>`);
+            }
+            
+            html += '</ul>';
+            materialsDiv.innerHTML = html;
+        }
+
+        function generateTimeline() {
+            const targetMonth = document.getElementById('targetMonth').value;
+            if (!targetMonth) {
+                alert('请选择目标申请月份');
+                return;
+            }
+            
+            const [year, month] = targetMonth.split('-').map(Number);
+            const timelineDiv = document.getElementById('timeline');
+            
+            // 倒推时间线
+            const steps = [
+                { month: -3, task: '准备税单和收入证明', desc: '联系HR和税务局' },
+                { month: -2, task: '办理无犯罪记录证明', desc: '户籍所在地派出所或公证处' },
+                { month: -1, task: '整理公司材料（如适用）', desc: '审计报告、营业执照等' },
+                { month: 0, task: '在线提交申请', desc: '入境处官网提交全部材料' },
+                { month: 1, task: '等待审批', desc: '通常4周内收到结果' }
+            ];
+            
+            let html = '<div class="space-y-4">';
+            steps.forEach(step => {
+                const stepDate = new Date(year, month - 1 + step.month, 1);
+                const dateStr = stepDate.toLocaleDateString('zh-CN', { year: 'numeric', month: 'long' });
+                html += `
+                    <div class="flex items-start space-x-4 p-3 bg-gray-50 rounded">
+                        <div class="font-bold text-blue-600 min-w-[100px]">${dateStr}</div>
+                        <div>
+                            <div class="font-medium">${step.task}</div>
+                            <div class="text-sm text-gray-600">${step.desc}</div>
+                        </div>
+                    </div>
+                `;
+            });
+            html += '</div>';
+            
+            timelineDiv.innerHTML = html;
+        }
+    </script>
+</body>
+</html>
